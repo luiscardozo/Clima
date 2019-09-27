@@ -13,31 +13,43 @@ class WeatherDaysActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_weather_days)
 
-        val lvWeatherDays = findViewById<ListView>(R.id.forecastListView)
-
-        val randomThings = listOf("Hola", "Mundo", "Kotlin","Hola", "Mundo", "Kotlin", "Hola", "Mundo", "Kotlin","Hola", "Mundo", "Kotlin", "Hola", "Mundo", "Kotlin","Hola", "Mundo", "Kotlin", "Hola", "Mundo", "Kotlin","Hola", "Mundo", "Kotlin", "Hola", "Mundo", "Kotlin","Hola", "Mundo", "Kotlin", "Hola", "Mundo", "Kotlin","Hola", "Mundo", "Kotlin")
-
-        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, randomThings)
-
-        lvWeatherDays.adapter = adapter
-
         val retriever = WeatherRetriever()
 
-        val callback = object : retrofit2.Callback<List<Forecast>>{
-
-            override fun onResponse(call: Call<List<Forecast>>, response: Response<List<Forecast>>) {
+        val callback = object : retrofit2.Callback<WeatherListFromAPI>{
+            override fun onResponse(call: Call<WeatherListFromAPI>, response: Response<WeatherListFromAPI>) {
                 println("Obtuvimos una respuesta")
-                println(response.body())
-                for(forecastDay in response.body()!!){
-                    println("High: ${forecastDay.high}, Low: ${forecastDay.low}")
+                println("Codigo: ${response.body()?.cod}, message: ${response.body()?.message}, city = ${response.body()?.city?.name}")
+                title = response.body()?.city?.name
+
+                val listOfForecasts = mutableListOf<String>()
+
+                var forecasts = response.body()?.list
+                if (forecasts != null) {
+                    for (forecast in forecasts) {
+                        val fc = "Fecha: ${forecast.dt_txt}, ${forecast.weather[0].description}, temp: ${forecast.main.temp}, humedad: ${forecast.main.humidity}"
+                        println(fc)
+                        listOfForecasts.add(fc)
+                    }
                 }
+
+                val lvWeatherDays = findViewById<ListView>(R.id.forecastListView)
+
+                val adapter = ArrayAdapter(this@WeatherDaysActivity, android.R.layout.simple_list_item_1, listOfForecasts)
+
+                lvWeatherDays.adapter = adapter
+
             }
 
-            override fun onFailure(call: Call<List<Forecast>>, t: Throwable) {
-                println("Obtuvimos un error")
+            override fun onFailure(call: Call<WeatherListFromAPI>, t: Throwable) {
+                println("Falló nuestra llamada a la API")
             }
+
         }
 
-        retriever.getForecast(callback)
+        val ciudadABuscar = intent.getStringExtra("cityToSearch") ?: ""
+
+        println("Ciudad a Buscar: $ciudadABuscar")
+
+        retriever.getForecast(callback, ciudadABuscar)
     }
 }

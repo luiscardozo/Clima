@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Clima</string>
     <string name="weather">Clima</string>
+    <string name="getForecast">Obtener Previsión de Tiempo</string>
 </resources>
